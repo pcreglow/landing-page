@@ -1,4 +1,4 @@
-// generated on 2015-07-30 using generator-gulp-webapp 1.0.1
+// generated on 2015-07-09 using generator-gulp-webapp 1.0.1
 import gulp from 'gulp';
 import gulpLoadPlugins from 'gulp-load-plugins';
 import browserSync from 'browser-sync';
@@ -7,6 +7,14 @@ import {stream as wiredep} from 'wiredep';
 
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
+
+// var ngAnnotate = require('gulp-ng-annotate');
+
+gulp.task('gulp-ng-annotate', function(){
+  return gulp.src('app/scripts/*.js')
+  .pipe(ngAnnotate())
+  .pipe(gulp.dest('dist'));
+});
 
 gulp.task('styles', () => {
   return gulp.src('app/styles/*.scss')
@@ -49,8 +57,9 @@ gulp.task('lint:test', lint('test/spec/**/*.js', testLintOptions));
 gulp.task('html', ['styles'], () => {
   const assets = $.useref.assets({searchPath: ['.tmp', 'app', '.']});
 
-  return gulp.src('app/*.html')
+  return gulp.src('app/**/*.html')
     .pipe(assets)
+    .pipe($.if('*.js', $.ngAnnotate()))
     .pipe($.if('*.js', $.uglify()))
     .pipe($.if('*.css', $.minifyCss({compatibility: '*'})))
     .pipe(assets.restore())
@@ -99,11 +108,13 @@ gulp.task('serve', ['styles', 'fonts'], () => {
     notify: false,
     port: 9000,
     server: {
-      baseDir: ['.tmp', 'app'],
+      baseDir: ['app', '.tmp'],
       routes: {
-        '/bower_components': 'bower_components'
+        '/bower_components': 'bower_components',
+        '/api': 'api'
       }
-    }
+    },
+    directory: true
   });
 
   gulp.watch([
@@ -123,7 +134,10 @@ gulp.task('serve:dist', () => {
     notify: false,
     port: 9000,
     server: {
-      baseDir: ['dist']
+      baseDir: ['dist'],
+      routes: {
+        '/bower_components': 'bower_components'
+      }
     }
   });
 });
